@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My First dApp</title>
+  </head>
+  <body>
+    <div>
+      <h1>This is my dApp!</h1>
+      <p>Here we can set or get the mood:</p>
+      <label for="mood">Input Mood:</label>
+      <input type="text" id="mood" />
+      <button onclick="getMood()">Get Mood</button>
+      <button onclick="setMood()">Set Mood</button>
+      <p>Your Current Mood is: </p>
+      <h1 id="mood-recieved"> </h1>
+    </div>
+
+    <script
+      charset="utf8"
+      src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"
+      type="text/javascript"
+    ></script>
+
+    <script>
+      //Provider which tells us that we are connected to MetaMask
+      const provider = new ethers.providers.Web3Provider(
+        window.ethereum,
+        "goerli"
+      );
+      const MoodContractAddress = "0xE5Bc01C5fd715Db0D88a30bC03Ae995a9229FC47";
+      const MoodContractABI = [
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "_mood",
+              type: "string",
+            },
+          ],
+          name: "setMood",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getMood",
+          outputs: [
+            {
+              internalType: "string",
+              name: "",
+              type: "string",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+      ];
+      let MoodContract;
+      let signer;
+      //It is connected to MetaMask
+      //So will be having all the information of my accounts
+      provider.send("eth_requestAccounts", []).then(() => {
+        provider.listAccounts().then(function (accounts) {
+          //Getting the first account
+          //Add it to the signer
+          //WE are actually signing in this
+          //Giving permission to get and set
+          signer = provider.getSigner(accounts[0]);
+          //Created the instance of the account
+          MoodContract = new ethers.Contract(
+            MoodContractAddress, //Storing the Address
+            MoodContractABI,
+            signer
+          );
+        });
+      });
+      //This function came from the MoodContract ABI
+      async function getMood() {
+        const getMoodPromise = MoodContract.getMood();
+        const Mood = await getMoodPromise;
+        let currMood = document.getElementById("mood-recieved").innerHTML = Mood;
+        console.log(Mood);
+      }
+      async function setMood() {
+        let mood = document.getElementById("mood").value;
+        const setMoodPromise = MoodContract.setMood(mood);
+        await setMoodPromise;
+      }
+    </script>
+  </body>
+</html>
